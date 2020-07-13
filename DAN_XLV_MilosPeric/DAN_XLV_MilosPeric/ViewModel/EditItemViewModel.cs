@@ -117,7 +117,8 @@ namespace DAN_XLV_MilosPeric.ViewModel
 
         private bool CanEditCommandExecute()
         {
-            if (string.IsNullOrEmpty(warehouseItem.ProductName))
+            if (string.IsNullOrEmpty(warehouseItem.ProductName) || string.IsNullOrEmpty(warehouseItem.ProductNumber) ||
+                string.IsNullOrEmpty(warehouseItem.Amount.ToString()) || string.IsNullOrEmpty(warehouseItem.Price))
             {
                 return false;
             }
