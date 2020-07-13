@@ -1,4 +1,5 @@
 ﻿using DAN_XLV_MilosPeric.Command;
+using DAN_XLV_MilosPeric.EventLogger;
 using DAN_XLV_MilosPeric.Validation;
 using DAN_XLV_MilosPeric.View;
 using System;
@@ -15,12 +16,19 @@ namespace DAN_XLV_MilosPeric.ViewModel
     {
         EditItem editItem;
         DataBaseService dataBaseService = new DataBaseService();
+        ActionEvent actionEventObject;
 
         public EditItemViewModel(EditItem editItemOpen, vwProduct warehouseItemEdit)
         {
             editItem = editItemOpen;
             WarehouseItem = warehouseItemEdit;
             WarehouseItemList = dataBaseService.GetAllWarehouseItems().ToList();
+            ProductNameBeforeEdit = warehouseItem.ProductName;
+            ProductNumberBeforeEdit = warehouseItem.ProductNumber;
+            AmountBeforeEdit = warehouseItem.Amount;
+            PriceBeforeEdit = warehouseItem.Price;
+            actionEventObject = new ActionEvent();
+            actionEventObject.ActionPerformed += ActionPerformed;
         }
 
         private vwProduct warehouseItem;
@@ -44,6 +52,11 @@ namespace DAN_XLV_MilosPeric.ViewModel
                 OnPropertyChanged("WarehouseItemList");
             }
         }
+
+        public string ProductNameBeforeEdit { get; set; }
+        public string ProductNumberBeforeEdit { get; set; }
+        public int? AmountBeforeEdit { get; set; }
+        public string PriceBeforeEdit { get; set; }
 
         private ICommand editCommand;
         public ICommand EditCommand
@@ -89,6 +102,10 @@ namespace DAN_XLV_MilosPeric.ViewModel
                 }
                 dataBaseService.EditWarehouseItem(WarehouseItem);
                 IsUpdateWarehouseItem = true;
+                string logMessage = string.Format("Warehouse Item: {0}, Item number: {1}, Item amount: {2}, Item price: {3} was edited to new Item Name:{4}," +
+                    " Item Number: {5}, Item Amount: {6}, Item Price: {7}.", ProductNameBeforeEdit, ProductNumberBeforeEdit, AmountBeforeEdit, PriceBeforeEdit, WarehouseItem.ProductName,
+                WarehouseItem.ProductNumber, WarehouseItem.Amount, WarehouseItem.Price);
+                actionEventObject.OnActionPerformed(logMessage);
                 MessageBox.Show("New Warehouse Item Edited Successfully!", "Info");
                 editItem.Close();
             }
@@ -154,6 +171,11 @@ namespace DAN_XLV_MilosPeric.ViewModel
             {
                 _isUpdateWarehouseItem = value;
             }
+        }
+
+        void ActionPerformed(object source, ActionEventArgs args)
+        {
+            Logger.logMessage = args.LogMessage;
         }
     }
 }

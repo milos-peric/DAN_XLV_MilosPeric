@@ -1,7 +1,10 @@
 ﻿using DAN_XLV_MilosPeric.Command;
+using DAN_XLV_MilosPeric.EventLogger;
 using DAN_XLV_MilosPeric.View;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -15,11 +18,22 @@ namespace DAN_XLV_MilosPeric.ViewModel
     {
         ManagerView mView;        
         DataBaseService dataBaseService = new DataBaseService();
+        ActionEvent actionEventObject;
+        BackgroundWorker backgroundWorker1;
         public ManagerViewModel(ManagerView managerView)
         {
             mView = managerView;
             warehouseItem = new vwProduct();
             WarehouseItemList = dataBaseService.GetAllWarehouseItems().ToList();
+            actionEventObject = new ActionEvent();
+            backgroundWorker1 = new BackgroundWorker()
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true,
+            };
+            backgroundWorker1.DoWork += DoWork;
+            backgroundWorker1.RunWorkerAsync();
+            actionEventObject.ActionPerformed += ActionPerformed;
         }
 
         private vwProduct warehouseItem;
@@ -143,9 +157,9 @@ namespace DAN_XLV_MilosPeric.ViewModel
                         case MessageBoxResult.OK:
                             int itemId = warehouseItem.ID;
                             dataBaseService.DeleteWarehouseItem(itemId);
-                            //string logMessage = string.Format("Worker {0} {1} - JMBG:{2}, was deleted from database.", _worker.FirstName,
-                            //    _worker.LastName, _worker.JMBG);
-                            //actionEventObject.OnActionPerformed(logMessage);
+                            string logMessage = string.Format("Warehouse Item: {0}, Item number: {1}, Item amount: {2}, was deleted from database.", WarehouseItem.ProductName,
+                                WarehouseItem.ProductNumber, WarehouseItem.Amount);
+                            actionEventObject.OnActionPerformed(logMessage);
                             WarehouseItemList = dataBaseService.GetAllWarehouseItems().ToList();
                             MessageBox.Show("Item deleted!", "Delete Record");
                             break;
@@ -210,6 +224,30 @@ namespace DAN_XLV_MilosPeric.ViewModel
             {
                 MessageBox.Show(ex.ToString());
             }
+        }
+
+        private void DoWork(object sender, DoWorkEventArgs e)
+        {
+            while (true)
+            {
+                if (!Logger.logMessage.Equals(""))
+                {
+                    Logger.LogToFile();
+                    Debug.WriteLine("Action was logged to file Log.txt");
+                }
+                Thread.Sleep(1000);
+
+                if (backgroundWorker1.CancellationPending)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+        }
+
+        void ActionPerformed(object source, ActionEventArgs args)
+        {
+            Logger.logMessage = args.LogMessage;
         }
     }
 }

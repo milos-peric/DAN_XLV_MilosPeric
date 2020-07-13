@@ -1,4 +1,5 @@
 ﻿using DAN_XLV_MilosPeric.Command;
+using DAN_XLV_MilosPeric.EventLogger;
 using DAN_XLV_MilosPeric.Validation;
 using DAN_XLV_MilosPeric.View;
 using System;
@@ -15,12 +16,15 @@ namespace DAN_XLV_MilosPeric.ViewModel
     {
         AddItem addItem;
         DataBaseService dataBaseService = new DataBaseService();
+        ActionEvent actionEventObject;
 
         public AddItemViewModel(AddItem item)
         {
             addItem = item;
             warehouseItem = new vwProduct();
             WarehouseItemList = dataBaseService.GetAllWarehouseItems().ToList();
+            actionEventObject = new ActionEvent();
+            actionEventObject.ActionPerformed += ActionPerformed;
         }
 
         private vwProduct warehouseItem;
@@ -90,6 +94,9 @@ namespace DAN_XLV_MilosPeric.ViewModel
                 WarehouseItem.InStock = false;
                 dataBaseService.AddWarehouseItem(WarehouseItem);
                 IsUpdateWarehouseItem = true;
+                string logMessage = string.Format("Warehouse Item: {0}, Item number: {1}, Item amount: {2}, Item price: {3} was added to database.", WarehouseItem.ProductName,
+                WarehouseItem.ProductNumber, WarehouseItem.Amount, WarehouseItem.Price);
+                actionEventObject.OnActionPerformed(logMessage);
                 MessageBox.Show("New Warehouse Item Added Successfully!", "Info");
                 addItem.Close();
             }
@@ -155,6 +162,11 @@ namespace DAN_XLV_MilosPeric.ViewModel
             {
                 _isUpdateWarehouseItem = value;
             }
+        }
+
+        void ActionPerformed(object source, ActionEventArgs args)
+        {
+            Logger.logMessage = args.LogMessage;
         }
     }
 }

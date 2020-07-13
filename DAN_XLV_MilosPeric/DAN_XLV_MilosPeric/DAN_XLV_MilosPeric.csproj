@@ -65,6 +65,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="DataBaseService.cs" />
+    <Compile Include="EventLogger\ActionEvent.cs" />
+    <Compile Include="EventLogger\ActionEventArgs.cs" />
+    <Compile Include="EventLogger\Logger.cs" />
     <Compile Include="tblProduct.cs">
       <DependentUpon>WarehouseDataBaseModel.tt</DependentUpon>
     </Compile>
